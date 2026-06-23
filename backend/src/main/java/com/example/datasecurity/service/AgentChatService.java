@@ -459,94 +459,76 @@ public class AgentChatService {
         int bestScore = 0;
         Intent best = Intent.UNKNOWN;
 
-        best = updateIntent(best, lower, "字段总数", "敏感字段数量", "多少个字段", "多少字段", 8, Intent.SENSITIVE_COUNT, bestScore);
         if (getScore(lower, "字段总数", "敏感字段数量", "多少个字段", "多少字段") > bestScore) {
             bestScore = getScore(lower, "字段总数", "敏感字段数量", "多少个字段", "多少字段");
             best = Intent.SENSITIVE_COUNT;
         }
 
-        best = updateIntent(best, lower, "高敏感", "高敏字段", "l4", "l5", "核心字段", 8, Intent.HIGH_FIELDS, bestScore);
         if (getScore(lower, "高敏感", "高敏字段", "l4", "l5", "核心字段") > bestScore) {
             bestScore = getScore(lower, "高敏感", "高敏字段", "l4", "l5", "核心字段");
             best = Intent.HIGH_FIELDS;
         }
 
-        best = updateIntent(best, lower, "字段", "field", "是什么", "详情", 5, Intent.FIELD_DETAIL, bestScore);
         if (getScore(lower, "字段", "field", "是什么", "详情") > bestScore) {
             bestScore = getScore(lower, "字段", "field", "是什么", "详情");
             best = Intent.FIELD_DETAIL;
         }
 
-        best = updateIntent(best, lower, "风险告警", "高风险行为", "风险", 7, Intent.RISK_ALERTS, bestScore);
         if (getScore(lower, "风险告警", "高风险行为", "风险") > bestScore) {
             bestScore = getScore(lower, "风险告警", "高风险行为", "风险");
             best = Intent.RISK_ALERTS;
         }
 
-        best = updateIntent(best, lower, "没有分类", "未分类", "还没分类", 9, Intent.UNCLASSIFIED_FIELDS, bestScore);
         if (getScore(lower, "没有分类", "未分类", "还没分类") > bestScore) {
             bestScore = getScore(lower, "没有分类", "未分类", "还没分类");
             best = Intent.UNCLASSIFIED_FIELDS;
         }
 
-        best = updateIntent(best, lower, "分类统计", "分级统计", "分类分布", "分级分布", "等级分布", 6, Intent.CLASSIFICATION_STATS, bestScore);
         if (getScore(lower, "分类统计", "分级统计", "分类分布", "分级分布", "等级分布") > bestScore) {
             bestScore = getScore(lower, "分类统计", "分级统计", "分类分布", "分级分布", "等级分布");
             best = Intent.CLASSIFICATION_STATS;
         }
 
-        best = updateIntent(best, lower, "访问过", "访问高敏", "谁访问", 6, Intent.L4_ACCESS_USERS, bestScore);
         if (getScore(lower, "访问过", "访问高敏", "谁访问") > bestScore) {
             bestScore = getScore(lower, "访问过", "访问高敏", "谁访问");
             best = Intent.L4_ACCESS_USERS;
         }
 
-        best = updateIntent(best, lower, "被拒绝", "rejected", "驳回", "拒绝", 8, Intent.REJECTED_REQUESTS, bestScore);
         if (getScore(lower, "被拒绝", "rejected", "驳回", "拒绝") > bestScore) {
             bestScore = getScore(lower, "被拒绝", "rejected", "驳回", "拒绝");
             best = Intent.REJECTED_REQUESTS;
         }
 
-        best = updateIntent(best, lower, "待审批", "等待审批", "pending", "审批", 7, Intent.PENDING_APPROVALS, bestScore);
         if (getScore(lower, "待审批", "等待审批", "pending", "审批") > bestScore) {
             bestScore = getScore(lower, "待审批", "等待审批", "pending", "审批");
             best = Intent.PENDING_APPROVALS;
         }
 
-        best = updateIntent(best, lower, "最近操作", "最近活动", "操作记录", "最近谁", 8, Intent.RECENT_OPERATIONS, bestScore);
         if (getScore(lower, "最近操作", "最近活动", "操作记录", "最近谁") > bestScore) {
             bestScore = getScore(lower, "最近操作", "最近活动", "操作记录", "最近谁");
             best = Intent.RECENT_OPERATIONS;
         }
 
-        best = updateIntent(best, lower, "访问统计", "申请统计", "有多少申请", 7, Intent.ACCESS_STATS, bestScore);
         if (getScore(lower, "访问统计", "申请统计", "有多少申请") > bestScore) {
             bestScore = getScore(lower, "访问统计", "申请统计", "有多少申请");
             best = Intent.ACCESS_STATS;
         }
 
-        best = updateIntent(best, lower, "数据源", "数据库列表", "数据表概览", "资产概览", 7, Intent.SOURCE_TABLE_SUMMARY, bestScore);
         if (getScore(lower, "数据源", "数据库列表", "数据表概览", "资产概览") > bestScore) {
             bestScore = getScore(lower, "数据源", "数据库列表", "数据表概览", "资产概览");
             best = Intent.SOURCE_TABLE_SUMMARY;
         }
 
-        best = updateIntent(best, lower, "系统概览", "全局概览", "治理概览", "首页", "dashboard", "总体情况", 6, Intent.DASHBOARD_SUMMARY, bestScore);
         if (getScore(lower, "系统概览", "全局概览", "治理概览", "首页", "dashboard", "总体情况") > bestScore) {
             bestScore = getScore(lower, "系统概览", "全局概览", "治理概览", "首页", "dashboard", "总体情况");
             best = Intent.DASHBOARD_SUMMARY;
         }
 
-        best = updateIntent(best, lower, "治理建议", "报告", "整改", "安全报告", 10, Intent.REPORT, bestScore);
         if (getScore(lower, "治理建议", "报告", "整改", "安全报告") > bestScore) {
             best = Intent.REPORT;
         }
 
         return best;
-    }
-
-    private Intent updateIntent(Intent current, String lower, String... keywords) {
-        return current; // no-op, the real logic is in the if block above
     }
 
     private int getScore(String lower, String... keywords) {
