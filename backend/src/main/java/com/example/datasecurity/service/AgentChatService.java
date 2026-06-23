@@ -48,7 +48,7 @@ public class AgentChatService {
                     """).stream().map(r -> String.valueOf(r.get("USERNAME"))).collect(Collectors.joining("、"));
             answer = answer.isBlank() ? "最近审计日志中没有用户访问 L4 字段。" : "访问过 L4 数据的用户：" + answer + "。";
         } else if (q.contains("风险告警")) {
-            answer = jdbc.queryForList("select top 5 risk_type, risk_level, description from risk_alert order by created_time desc, alert_id desc")
+            answer = jdbc.queryForList("select risk_type, risk_level, description from risk_alert order by created_time desc, alert_id desc limit 5")
                     .stream().map(r -> "[" + r.get("RISK_LEVEL") + "] " + r.get("DESCRIPTION")).collect(Collectors.joining("\n"));
             answer = answer.isBlank() ? "当前暂无风险告警。" : answer;
         } else if (q.contains("没有分类") || q.contains("未分类")) {
@@ -82,7 +82,7 @@ public class AgentChatService {
                 join classification_category c on c.id=fc.category_id
                 where l.level_code in ('L4','L5') order by l.level_order desc, f.id
                 """).stream().map(r -> r.get("FIELD_NAME") + "(" + r.get("LEVEL_CODE") + "," + r.get("CATEGORY_NAME") + ")").collect(Collectors.joining("、"));
-        String alerts = jdbc.queryForList("select top 5 risk_type, risk_level, description from risk_alert order by created_time desc, alert_id desc")
+        String alerts = jdbc.queryForList("select risk_type, risk_level, description from risk_alert order by created_time desc, alert_id desc limit 5")
                 .stream().map(r -> "[" + r.get("RISK_LEVEL") + "]" + r.get("RISK_TYPE") + ":" + r.get("DESCRIPTION")).collect(Collectors.joining("\n"));
         return """
                 数据源数量: %d

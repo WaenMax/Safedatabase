@@ -5,7 +5,7 @@
 ## 技术栈
 
 - 后端：Java 17、Spring Boot 3、Spring Web、Spring JDBC、Spring Security、Lombok
-- 数据库：SQL Server 主脚本，内置 H2 演示库便于直接运行
+- 数据库：MySQL，启动时自动初始化演示表和数据
 - 前端：Vue 3、Vite、Element Plus、Axios、Vue Router
 
 ## 功能模块
@@ -26,7 +26,7 @@
 
 Agent 模块新增 4 张表：`agent_task`、`agent_recommendation`、`risk_alert`、`agent_chat_history`。
 
-SQL Server 脚本还包含：
+当前 MySQL 初始化脚本包含核心表、索引和演示数据。课程设计中的数据库对象还包括：
 
 - 视图：`sensitive_field_view`、`user_accessible_field_view`
 - 存储过程：`sp_count_sensitive_fields_by_source`、`sp_auto_classify_fields`
@@ -40,17 +40,27 @@ cd backend
 mvn spring-boot:run
 ```
 
-默认使用 H2 内存库，启动后自动执行 `backend/src/main/resources/schema.sql` 和 `data.sql`。后端地址：`http://localhost:8080`。
+默认使用 MySQL，启动后自动执行 `backend/src/main/resources/schema.sql` 和 `data.sql`。后端地址：`http://localhost:8080`。
 
-如需连接 SQL Server：
+启动前先创建数据库：
 
-1. 在 SQL Server 中执行 `sql/sqlserver_schema_init.sql`
-2. 修改 `backend/src/main/resources/application.yml` 中 `sqlserver` profile 的账号密码
-3. 启动：
+```bash
+mysql -u root -p -e "create database if not exists data_security default character set utf8mb4 collate utf8mb4_unicode_ci;"
+```
+
+默认连接参数可通过环境变量覆盖：
+
+```bash
+MYSQL_URL=jdbc:mysql://localhost:3306/data_security?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&useSSL=false
+MYSQL_USERNAME=root
+MYSQL_PASSWORD=123456
+```
+
+启动：
 
 ```bash
 cd backend
-mvn spring-boot:run -Dspring-boot.run.profiles=sqlserver
+mvn spring-boot:run
 ```
 
 ## 启动前端
@@ -79,7 +89,7 @@ npm run dev
 ```text
 backend/     Spring Boot 后端
 frontend/    Vue 3 前端
-sql/         SQL Server 建表与初始化脚本
+sql/         MySQL 建表与初始化脚本
 docs/        课程设计报告辅助材料
 ```
 

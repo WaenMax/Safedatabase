@@ -30,7 +30,7 @@ public class AccessReviewAgentService {
         Long userId = num(r.get("USER_ID"));
         int rejected = jdbc.queryForObject("""
                 select count(*) from access_request
-                where user_id=? and status='REJECTED' and request_time >= dateadd(day, -7, current_timestamp)
+                where user_id=? and status='REJECTED' and request_time >= date_sub(current_timestamp, interval 7 day)
                 """, Integer.class, userId);
 
         String risk = "low";

@@ -18,7 +18,7 @@ public class AuditRiskAgentService {
 
         for (Map<String, Object> row : jdbc.queryForList("""
                 select user_id, count(*) cnt from audit_log
-                where operation_type='VIEW_RAW_VALUE' and operation_time >= dateadd(minute, -10, current_timestamp)
+                where operation_type='VIEW_RAW_VALUE' and operation_time >= date_sub(current_timestamp, interval 10 minute)
                 group by user_id having count(*) > 5
                 """)) {
             alerts.add(create("FREQUENT_SENSITIVE_VIEW", "medium", num(row.get("USER_ID")), "audit_log", null,
@@ -30,7 +30,7 @@ public class AuditRiskAgentService {
                 join field_classification fc on fc.field_id=f.id
                 join classification_level l on l.id=fc.level_id
                 where a.operation_type='VIEW_RAW_VALUE' and l.level_code in ('L4','L5')
-                  and a.operation_time >= dateadd(minute, -10, current_timestamp)
+                  and a.operation_time >= date_sub(current_timestamp, interval 10 minute)
                 group by a.user_id having count(*) > 3
                 """)) {
             alerts.add(create("FREQUENT_HIGH_SENSITIVE_VIEW", "high", num(row.get("USER_ID")), "data_field_asset", null,
@@ -38,7 +38,7 @@ public class AuditRiskAgentService {
         }
         for (Map<String, Object> row : jdbc.queryForList("""
                 select user_id, count(*) cnt from audit_log
-                where operation_type='LOGIN' and result='FAIL' and operation_time >= dateadd(hour, -1, current_timestamp)
+                where operation_type='LOGIN' and result='FAIL' and operation_time >= date_sub(current_timestamp, interval 1 hour)
                 group by user_id having count(*) > 5
                 """)) {
             alerts.add(create("LOGIN_FAIL_TOO_MANY", "high", num(row.get("USER_ID")), "sys_user", num(row.get("USER_ID")),
@@ -46,7 +46,7 @@ public class AuditRiskAgentService {
         }
         for (Map<String, Object> row : jdbc.queryForList("""
                 select ip_address, count(distinct user_id) cnt from audit_log
-                where operation_type='LOGIN' and result='SUCCESS' and operation_time >= dateadd(hour, -1, current_timestamp)
+                where operation_type='LOGIN' and result='SUCCESS' and operation_time >= date_sub(current_timestamp, interval 1 hour)
                 group by ip_address having count(distinct user_id) >= 3
                 """)) {
             alerts.add(create("MULTI_ACCOUNT_SAME_IP", "medium", null, "ip_address", null,

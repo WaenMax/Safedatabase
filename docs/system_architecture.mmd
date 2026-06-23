@@ -6,7 +6,7 @@ flowchart LR
   API --> Workflow["访问申请审批服务"]
   API --> Audit["审计日志服务"]
   API --> Agent["数据安全治理 Agent 服务"]
-  Asset --> DB["SQL Server / H2"]
+  Asset --> DB["MySQL"]
   Classify --> DB
   Workflow --> DB
   Audit --> DB
@@ -20,4 +20,4 @@ flowchart LR
   RiskAgent --> DB
   ReportAgent --> DB
   ChatAgent --> DB
-  DB --> Views["视图 / 存储过程 / 触发器 / 索引"]
+  DB --> Views["表 / 索引 / 初始化数据"]

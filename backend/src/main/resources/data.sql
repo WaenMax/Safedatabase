@@ -42,7 +42,7 @@ insert into classification_rule(rule_name, match_type, match_pattern, category_i
 ('邮箱识别','keyword','email',1,3,1,current_timestamp);
 
 insert into data_source(id, source_name, source_type, host, port, database_name, description, created_time) values
-(1,'客户经营库','SQL Server','127.0.0.1',1433,'customer_db','客户和订单演示数据源',current_timestamp),
+(1,'客户经营库','MySQL','127.0.0.1',3306,'customer_db','客户和订单演示数据源',current_timestamp),
 (2,'运维日志库','MySQL','127.0.0.1',3306,'ops_db','系统运维演示数据源',current_timestamp);
 
 insert into data_table_asset(id, source_id, table_name, business_name, description, owner_department, created_time) values
@@ -77,8 +77,8 @@ insert into masking_policy(policy_name, policy_type, example_before, example_aft
 ('银行卡脱敏','bank_card','6222020202021234','6222 **** **** 1234','保留前四后四',1);
 
 insert into access_request(user_id, field_id, reason, status, request_time, valid_until) values
-(3,4,'客户实名核验问题排查','PENDING',current_timestamp,dateadd('day',7,current_timestamp)),
-(3,6,'订单退款银行卡核对','APPROVED',current_timestamp,dateadd('day',7,current_timestamp));
+(3,4,'客户实名核验问题排查','PENDING',current_timestamp,date_add(current_timestamp, interval 7 day)),
+(3,6,'订单退款银行卡核对','APPROVED',current_timestamp,date_add(current_timestamp, interval 7 day));
 
 insert into approval_record(request_id, approver_id, approval_result, approval_comment, approval_time) values
 (2,4,'APPROVED','演示审批通过',current_timestamp);
@@ -101,10 +101,10 @@ insert into agent_chat_history(user_id,question,answer,created_time) values
 (2,'当前系统的敏感字段数量是多少？','当前敏感字段数量为 6 个。',current_timestamp),
 (1,'生成一份安全治理建议','建议优先复核 L4/L5 字段访问授权、完善脱敏策略覆盖率并定期分析审计日志。',current_timestamp);
 
-alter table sys_user alter column id restart with 100;
-alter table sys_role alter column id restart with 100;
-alter table data_source alter column id restart with 100;
-alter table data_table_asset alter column id restart with 100;
-alter table data_field_asset alter column id restart with 100;
-alter table classification_category alter column id restart with 100;
-alter table classification_level alter column id restart with 100;
+alter table sys_user auto_increment = 100;
+alter table sys_role auto_increment = 100;
+alter table data_source auto_increment = 100;
+alter table data_table_asset auto_increment = 100;
+alter table data_field_asset auto_increment = 100;
+alter table classification_category auto_increment = 100;
+alter table classification_level auto_increment = 100;

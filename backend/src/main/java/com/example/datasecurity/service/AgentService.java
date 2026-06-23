@@ -68,8 +68,8 @@ public class AgentService {
                 "todayTaskCount", jdbc.queryForObject("select count(*) from agent_task where cast(created_time as date)=current_date", Integer.class),
                 "openAlertCount", jdbc.queryForObject("select count(*) from risk_alert where status in ('OPEN','GENERATED')", Integer.class),
                 "highAlertCount", jdbc.queryForObject("select count(*) from risk_alert where risk_level='high' and status in ('OPEN','GENERATED')", Integer.class),
-                "recentRecommendations", jdbc.queryForList("select top 8 * from agent_recommendation order by created_time desc, recommendation_id desc"),
-                "recentAlerts", jdbc.queryForList("select top 8 * from risk_alert order by created_time desc, alert_id desc")
+                "recentRecommendations", jdbc.queryForList("select * from agent_recommendation order by created_time desc, recommendation_id desc limit 8"),
+                "recentAlerts", jdbc.queryForList("select * from risk_alert order by created_time desc, alert_id desc limit 8")
         );
     }
 

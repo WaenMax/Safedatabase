@@ -73,7 +73,7 @@ def make_architecture():
     ]
     for text, x, y in modules:
         draw_box(d, (x, y, x + 230, y + 75), text, fill="#F7FBFF")
-    draw_box(d, (1150, 160, 1490, 330), "SQL Server / H2\n表、索引、视图\n存储过程、触发器", fill="#FFF8E8", outline="#C78500")
+    draw_box(d, (1150, 160, 1490, 330), "MySQL\n表、索引\n初始化数据", fill="#FFF8E8", outline="#C78500")
     draw_box(d, (1150, 480, 1490, 665), "Agent 子服务\n字段分类 / 审批建议\n风险分析 / 安全报告 / 问答", fill="#F4F6F9", outline="#6B7280")
     draw_arrow(d, (310, 200), (440, 200))
     for _, x, y in modules:
@@ -338,13 +338,13 @@ def build():
     add_heading(doc, "摘要")
     add_para(
         doc,
-        "本项目面向企业数据资产管理和数据安全治理场景，设计并实现“基于分类分级的数据安全治理系统”。系统围绕数据源、数据表、字段资产、分类类别、安全等级、分类规则、脱敏策略、访问申请、审批记录、审计日志和治理 Agent 等核心对象建立统一数据库模型，支持字段资产登记、敏感字段识别、L1-L5 分级保护、规则自动分类、动态脱敏展示、L4/L5 高敏字段访问审批、审计留痕、风险告警和安全报告生成。数据库设计遵循实体完整性、参照完整性、最小权限、可审计和可追溯原则，完成概念模型、逻辑模型、物理模型与 BCNF 规范化分析，并在 SQL Server 脚本中实现主外键、唯一约束、检查约束、索引、视图、存储过程和触发器。系统实现采用 Spring Boot 3、Spring JDBC、Spring Security、Vue 3、Element Plus 和 SQL Server/H2，形成前后端分离架构。项目还引入本地规则型数据安全治理 Agent，实现字段智能分类、访问审批建议、审计风险分析、Markdown 安全报告和问答辅助，构建“识别-防护-审批-审计-告警-整改”的闭环。测试结果表明，系统能够完整支撑数据分类分级保护流程，具备较好的安全性、可扩展性和课程演示价值。",
+        "本项目面向企业数据资产管理和数据安全治理场景，设计并实现“基于分类分级的数据安全治理系统”。系统围绕数据源、数据表、字段资产、分类类别、安全等级、分类规则、脱敏策略、访问申请、审批记录、审计日志和治理 Agent 等核心对象建立统一数据库模型，支持字段资产登记、敏感字段识别、L1-L5 分级保护、规则自动分类、动态脱敏展示、L4/L5 高敏字段访问审批、审计留痕、风险告警和安全报告生成。数据库设计遵循实体完整性、参照完整性、最小权限、可审计和可追溯原则，完成概念模型、逻辑模型、物理模型与 BCNF 规范化分析，并在 MySQL 初始化脚本中实现核心表、唯一约束、索引和演示数据。系统实现采用 Spring Boot 3、Spring JDBC、Spring Security、Vue 3、Element Plus 和 MySQL，形成前后端分离架构。项目还引入本地规则型数据安全治理 Agent，实现字段智能分类、访问审批建议、审计风险分析、Markdown 安全报告和问答辅助，构建“识别-防护-审批-审计-告警-整改”的闭环。测试结果表明，系统能够完整支撑数据分类分级保护流程，具备较好的安全性、可扩展性和课程演示价值。",
     )
     add_para(doc, "主题词：数据安全；数据库设计；分类分级；动态脱敏；访问审批；审计日志；治理 Agent", False)
     add_heading(doc, "Abstract")
     add_para(
         doc,
-        "This project designs and implements a data security governance system based on data classification and grading. It builds a unified database model around data assets, field-level classification, masking policies, access requests, approval records, audit logs, and governance agents. The system supports asset registration, sensitive-field identification, L1-L5 grading, rule-based automatic classification, dynamic masking, approval control for L4/L5 raw-value access, audit tracing, risk alerts, and security report generation. The database design follows integrity, least privilege, auditability, and traceability principles, and implements tables, constraints, indexes, views, stored procedures, and triggers in SQL Server. The implementation adopts Spring Boot 3, Spring JDBC, Spring Security, Vue 3, Element Plus, and SQL Server/H2. A local rule-based governance agent is added to provide classification suggestions, access review suggestions, audit-risk analysis, security reports, and question-answer assistance.",
+        "This project designs and implements a data security governance system based on data classification and grading. It builds a unified database model around data assets, field-level classification, masking policies, access requests, approval records, audit logs, and governance agents. The system supports asset registration, sensitive-field identification, L1-L5 grading, rule-based automatic classification, dynamic masking, approval control for L4/L5 raw-value access, audit tracing, risk alerts, and security report generation. The database design follows integrity, least privilege, auditability, and traceability principles, and implements core tables, constraints, indexes, and demo data in MySQL. The implementation adopts Spring Boot 3, Spring JDBC, Spring Security, Vue 3, Element Plus, and MySQL. A local rule-based governance agent is added to provide classification suggestions, access review suggestions, audit-risk analysis, security reports, and question-answer assistance.",
         False,
     )
     add_para(doc, "Keywords: Data Security; Database Design; Classification and Grading; Dynamic Masking; Access Approval; Audit Log; Governance Agent", False)
@@ -378,7 +378,7 @@ def build():
         "完成数据资产、分类分级、脱敏策略、访问审批、审计日志和 Agent 治理需求分析。",
         "设计包含 20 张核心表的概念模型和逻辑模型，并梳理实体关系、主外键和约束。",
         "完成关系模式规范化分析，说明主要关系满足 BCNF 的依据。",
-        "编写 SQL Server 建库脚本，实现表、索引、视图、存储过程和触发器。",
+        "编写 MySQL 初始化脚本，实现核心表、索引和演示数据。",
         "基于 Spring Boot 与 Vue 实现前后端分离系统，覆盖登录、资产管理、分类分级、脱敏、审批、审计和 Agent 页面。",
         "完成测试用例设计与结果分析，验证核心业务流程和数据库安全控制。",
     ]:
@@ -387,7 +387,7 @@ def build():
     add_heading(doc, "2 系统设计")
     add_heading(doc, "2.1 系统总体设计", 2)
     add_heading(doc, "2.1.1 系统架构设计", 3)
-    add_para(doc, "系统采用前后端分离架构。前端使用 Vue 3、Vite、Element Plus 和 Axios，负责登录、资产列表、分类分级、审批、审计、看板和 Agent 工作台等交互界面；后端使用 Spring Boot 3、Spring Web、Spring JDBC 和 Spring Security，对外提供 REST API；数据库层使用 SQL Server 作为主设计目标，同时使用 H2 内存库便于课程演示和快速启动。")
+    add_para(doc, "系统采用前后端分离架构。前端使用 Vue 3、Vite、Element Plus 和 Axios，负责登录、资产列表、分类分级、审批、审计、看板和 Agent 工作台等交互界面；后端使用 Spring Boot 3、Spring Web、Spring JDBC 和 Spring Security，对外提供 REST API；数据库层使用 MySQL 作为系统运行数据库，启动时加载 schema.sql 与 data.sql 完成演示数据初始化。")
     doc.add_picture(str(arch), width=Inches(6.5))
     add_caption(doc, "图2-1 系统总体架构图")
     add_heading(doc, "2.1.2 核心业务流程设计", 3)
@@ -478,7 +478,7 @@ def build():
         ],
     )
     add_heading(doc, "2.2.3 物理模型设计", 3)
-    add_para(doc, "物理模型以 SQL Server 为主，使用 bigint identity 作为主键，nvarchar 存储中文业务字段，datetime2 存储时间，decimal(5,2) 存储置信度。针对查询高频字段建立索引，包括字段名、分类等级、审计用户、审计时间、申请状态、Agent 任务类型、推荐目标、风险等级和问答用户等。")
+    add_para(doc, "物理模型以 MySQL 为主，使用 bigint auto_increment 作为主键，varchar/text 存储业务字段，timestamp 存储时间，decimal(5,2) 存储置信度。针对查询高频字段建立索引，包括字段名、分类等级、审计用户、审计时间、申请状态、Agent 任务类型、推荐目标、风险等级和问答用户等。")
     add_table(
         doc,
         ["物理对象", "名称", "用途"],
@@ -528,7 +528,7 @@ def build():
         ["类别", "工具/版本", "说明"],
         [
             ["后端", "Java 17, Spring Boot 3.3.5, Spring Web, Spring JDBC, Spring Security, Lombok", "实现 REST API、认证上下文、数据库访问和服务层逻辑。"],
-            ["数据库", "SQL Server, H2", "SQL Server 为正式脚本目标，H2 用于内存演示。"],
+            ["数据库", "MySQL 8", "系统运行数据库，启动时自动初始化演示表和数据。"],
             ["前端", "Vue 3, Vite, Element Plus, Axios, Vue Router", "实现单页应用、管理界面和 Agent 页面。"],
             ["构建", "Maven, npm", "分别构建后端 JAR 和前端静态资源。"],
         ],
@@ -560,7 +560,7 @@ def build():
 
     add_heading(doc, "4 系统测试")
     add_heading(doc, "4.1 测试环境", 2)
-    add_para(doc, "测试环境使用 Windows 本地开发环境，后端通过 Maven 启动 Spring Boot 服务，默认连接 H2 内存数据库并加载 schema.sql 与 data.sql；前端通过 npm run dev 启动 Vite 服务；浏览器访问 http://localhost:5173。系统也提供 SQL Server 初始化脚本，可执行 sql/sqlserver_schema_init.sql 后切换 sqlserver profile。")
+    add_para(doc, "测试环境使用 Windows 本地开发环境，后端通过 Maven 启动 Spring Boot 服务，默认连接 MySQL 数据库并加载 schema.sql 与 data.sql；前端通过 npm run dev 启动 Vite 服务；浏览器访问 http://localhost:5173。也可直接执行 sql/mysql_schema_init.sql 初始化数据库。")
     add_heading(doc, "4.2 测试内容与结果分析", 2)
     add_table(
         doc,
@@ -596,7 +596,7 @@ def build():
     for item in [
         "完成数据分类分级保护系统的需求分析、总体架构、核心业务流程和数据库建模。",
         "设计 20 张核心表，覆盖用户权限、数据资产、分类分级、访问审批、审计日志和 Agent 治理。",
-        "完成 SQL Server 建库脚本，包含约束、索引、视图、存储过程、触发器和演示数据。",
+        "完成 MySQL 初始化脚本，包含核心表、约束、索引和演示数据。",
         "实现 Spring Boot 后端 REST API 与 Vue 3 前端页面，支撑完整课程演示流程。",
         "实现本地规则型 Agent，提高字段分类、审批建议、风险分析和报告生成的智能化程度。",
     ]:
@@ -653,7 +653,7 @@ def build():
         "全国信息安全标准化技术委员会．GB/T 44226-2024 信息安全技术 数据分类分级实施指南［S］．北京：中国标准出版社，2024．",
         "文继荣，李铭轩．AIGC时代网络生成内容合规治理与检测技术框架［J］．北京理工大学学报（社会科学版），2023，25(6)：121-130．",
         "屠要峰，牛家浩，王德政．面向开放大数据环境的动态数据保护系统［J］．软件学报，2023，34(3)：1213-1235．",
-        "项目源码与数据库脚本：D:/database/backend，D:/database/frontend，D:/database/sql/sqlserver_schema_init.sql．",
+        "项目源码与数据库脚本：D:/database/backend，D:/database/frontend，D:/database/sql/mysql_schema_init.sql．",
     ]
     for i, ref in enumerate(refs, 1):
         add_para(doc, f"[{i}] {ref}", False, after=3)

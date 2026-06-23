@@ -23,7 +23,7 @@ public class SecurityReportAgentService {
         int policies = count("select count(*) from masking_policy where enabled=1");
         double coverage = fields == 0 ? 0 : classified * 100.0 / fields;
         double maskingCoverage = sensitive == 0 ? 100 : Math.min(100, policies * 25.0);
-        String alerts = jdbc.queryForList("select top 5 risk_type, risk_level, description from risk_alert order by created_time desc, alert_id desc")
+        String alerts = jdbc.queryForList("select risk_type, risk_level, description from risk_alert order by created_time desc, alert_id desc limit 5")
                 .stream().map(a -> "- [" + a.get("RISK_LEVEL") + "] " + a.get("RISK_TYPE") + ": " + a.get("DESCRIPTION"))
                 .reduce("", (a, b) -> a + b + "\n");
         String md = """

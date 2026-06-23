@@ -1,4 +1,4 @@
-﻿# 数据分类分级保护系统最终成品设计文档
+# 数据分类分级保护系统最终成品设计文档
 
 ## 1. 文档说明
 
@@ -249,7 +249,7 @@ flowchart TB
     API --> Agent["数据安全治理 Agent"]
     Agent --> LocalRules["本地规则工具"]
     Agent --> LLM["DeepSeek / SiliconFlow / Local"]
-    API --> DB["H2 演示库或 SQL Server"]
+    API --> DB["MySQL 数据库"]
 ```
 
 ### 6.2 后端技术栈
@@ -261,8 +261,7 @@ flowchart TB
 | Spring Web | REST API |
 | Spring JDBC | 数据访问 |
 | Spring Security | 登录认证和接口保护 |
-| H2 | 本地演示数据库 |
-| SQL Server | 课程设计主数据库脚本 |
+| MySQL | 系统运行数据库与初始化脚本 |
 | LangChain4j | Agent 和 OpenAI-compatible 模型调用编排 |
 
 ### 6.3 前端技术栈
@@ -426,7 +425,7 @@ flowchart LR
 8. Agent 能生成字段分类建议、审批建议、风险告警和安全报告。
 9. 右下角悬浮 AI 助手可打开、可发送问题、可选择 provider。
 10. DeepSeek 或硅基流动 API 不可用时，本地规则 Agent 仍可正常回答。
-11. 后端支持 H2 演示运行和 SQL Server 脚本初始化。
+11. 后端支持 MySQL 初始化并可直接连接 MySQL 运行。
 12. 项目文档包含启动说明、接口说明、数据库设计和最终设计说明。
 
 ## 13. 推荐答辩演示流程

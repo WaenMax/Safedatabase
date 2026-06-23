@@ -81,8 +81,8 @@ public class WorkflowController {
                         left join field_classification fc on fc.category_id=c.id group by c.category_name order by c.category_name
                         """),
                 "recentAuditLogs", jdbc.queryForList("""
-                        select top 8 a.*, u.username from audit_log a left join sys_user u on u.id=a.user_id
-                        order by a.operation_time desc, a.id desc
+                        select a.*, u.username from audit_log a left join sys_user u on u.id=a.user_id
+                        order by a.operation_time desc, a.id desc limit 8
                         """)
         );
     }
