@@ -26,13 +26,13 @@ public class ClassificationController {
     @GetMapping("/api/field-classifications")
     public Object classifications() {
         return jdbc.queryForList("""
-                select fc.*, f.field_name, c.category_name, l.level_code, l.level_name
+                select fc.*, f.field_name, f.sample_value, f.field_comment, c.category_name, l.level_code, l.level_name
                 from field_classification fc
                 join data_field_asset f on f.id=fc.field_id
                 join classification_category c on c.id=fc.category_id
                 join classification_level l on l.id=fc.level_id
                 order by fc.id
-                """);
+                """).stream().peek(this::attachEvidence).toList();
     }
 
     @PostMapping("/api/field-classifications")
@@ -117,4 +117,32 @@ public class ClassificationController {
 
     private boolean bool(Object v) { return v instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(v)); }
     private Long num(Object v) { return v instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(v)); }
+
+    private void attachEvidence(Map<String, Object> row) {
+        String fieldName = String.valueOf(row.getOrDefault("FIELD_NAME", "")).toLowerCase();
+        String comment = String.valueOf(row.getOrDefault("FIELD_COMMENT", "")).toLowerCase();
+        String sample = String.valueOf(row.getOrDefault("SAMPLE_VALUE", ""));
+        String combined = fieldName + " " + comment;
+        String rule = jdbc.queryForList("select rule_name, match_pattern from classification_rule where enabled=1 order by id").stream()
+                .filter(r -> java.util.Arrays.stream(String.valueOf(r.get("MATCH_PATTERN")).toLowerCase().split("[,/|]"))
+                        .map(String::trim).filter(s -> !s.isBlank()).anyMatch(combined::contains))
+                .map(r -> r.get("RULE_NAME") + " (" + r.get("MATCH_PATTERN") + ")")
+                .findFirst().orElse("未命中字段名规则");
+        String format = "未命中格式特征";
+        if (sample.matches("1[3-9]\\d{9}")) format = "样例值符合手机号格式";
+        else if (sample.matches("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$")) format = "样例值符合邮箱格式";
+        else if (sample.matches("^\\d{17}[0-9Xx]$")) format = "样例值符合身份证格式";
+        else if (sample.matches("^\\d{12,19}$")) format = "样例值符合银行卡/账号格式";
+        else if (fieldName.contains("password") || fieldName.contains("secret") || fieldName.contains("token")) format = "字段名包含密码/密钥特征";
+        row.put("EVIDENCE_RULE", rule);
+        row.put("EVIDENCE_FORMAT", format);
+        row.put("LEVEL_EXPLANATION", switch (String.valueOf(row.get("LEVEL_CODE"))) {
+            case "L1" -> "公开数据，泄露影响较小";
+            case "L2" -> "内部数据，仅限组织内部使用";
+            case "L3" -> "敏感数据，默认脱敏展示";
+            case "L4" -> "高敏数据，原始值访问需要审批";
+            case "L5" -> "核心数据，按最高强度审计和审批";
+            default -> "未定义等级";
+        });
+    }
 }

@@ -17,7 +17,15 @@
     </div>
     <div class="agent-messages">
       <div v-for="(m, i) in messages" :key="i" :class="['agent-msg', m.role]">
-        <div class="markdown-body" v-html="renderMarkdown(m.content)"></div>
+        <div>
+          <div class="markdown-body" v-html="renderMarkdown(m.content)"></div>
+          <div v-if="m.actions?.length" class="mini-actions">
+            <button v-for="action in m.actions" :key="action.path" @click="$router.push(action.path)">{{ action.label }}</button>
+          </div>
+          <div v-if="m.references?.length" class="mini-references">
+            <span v-for="item in m.references" :key="item.title + item.source">{{ item.title }} · {{ item.count }}</span>
+          </div>
+        </div>
       </div>
     </div>
     <div class="agent-quick">
@@ -58,7 +66,7 @@ async function send() {
   loading.value = true
   try {
     const res = await api.post('/agent/chat', { question: q, provider: provider.value, model: model.value })
-    messages.value.push({ role: 'assistant', content: res.answer })
+    messages.value.push({ role: 'assistant', content: res.answer, references: res.references || [], actions: res.actions || [] })
     question.value = ''
   } catch (e) {
     const msg = e?.response?.data?.message || 'AI 助手请求失败，请检查后端日志或 API Key 配置。'
