@@ -1,0 +1,23 @@
+flowchart LR
+  Browser["Vue 3 + Element Plus 前端"] --> API["Spring Boot REST API"]
+  API --> Auth["登录与角色上下文"]
+  API --> Asset["数据资产服务"]
+  API --> Classify["分类分级服务"]
+  API --> Workflow["访问申请审批服务"]
+  API --> Audit["审计日志服务"]
+  API --> Agent["数据安全治理 Agent 服务"]
+  Asset --> DB["SQL Server / H2"]
+  Classify --> DB
+  Workflow --> DB
+  Audit --> DB
+  Agent --> FieldAgent["字段分类 Agent"]
+  Agent --> ReviewAgent["审批建议 Agent"]
+  Agent --> RiskAgent["审计风险 Agent"]
+  Agent --> ReportAgent["安全报告 Agent"]
+  Agent --> ChatAgent["问答 Agent"]
+  FieldAgent --> DB
+  ReviewAgent --> DB
+  RiskAgent --> DB
+  ReportAgent --> DB
+  ChatAgent --> DB
+  DB --> Views["视图 / 存储过程 / 触发器 / 索引"]

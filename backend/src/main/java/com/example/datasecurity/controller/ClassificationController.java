@@ -1,0 +1,120 @@
+package com.example.datasecurity.controller;
+
+import com.example.datasecurity.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Pattern;
+
+@RestController
+@RequiredArgsConstructor
+public class ClassificationController {
+    private final JdbcTemplate jdbc;
+    private final AuthService auth;
+
+    @GetMapping("/api/categories")
+    public Object categories() { return jdbc.queryForList("select * from classification_category order by id"); }
+
+    @GetMapping("/api/levels")
+    public Object levels() { return jdbc.queryForList("select * from classification_level order by level_order"); }
+
+    @GetMapping("/api/field-classifications")
+    public Object classifications() {
+        return jdbc.queryForList("""
+                select fc.*, f.field_name, c.category_name, l.level_code, l.level_name
+                from field_classification fc
+                join data_field_asset f on f.id=fc.field_id
+                join classification_category c on c.id=fc.category_id
+                join classification_level l on l.id=fc.level_id
+                order by fc.id
+                """);
+    }
+
+    @PostMapping("/api/field-classifications")
+    public Object createClassification(@RequestBody Map<String, Object> b, HttpServletRequest request) {
+        jdbc.update("""
+                merge into field_classification(field_id, category_id, level_id, classify_method, classified_by, classified_time, remark)
+                key(field_id) values(?, ?, ?, ?, ?, ?, ?)
+                """, b.get("field_id"), b.get("category_id"), b.get("level_id"), "MANUAL", auth.currentUserId(request), LocalDateTime.now(), b.get("remark"));
+        jdbc.update("update data_field_asset set is_sensitive=(select case when level_order>=3 then 1 else 0 end from classification_level where id=?) where id=?",
+                b.get("level_id"), b.get("field_id"));
+        auth.audit(auth.currentUserId(request), "UPDATE_CLASSIFICATION", "data_field_asset", num(b.get("field_id")), auth.ip(request), "SUCCESS", "人工分类分级");
+        return Map.of("success", true);
+    }
+
+    @PutMapping("/api/field-classifications/{id}")
+    public Object updateClassification(@PathVariable Long id, @RequestBody Map<String, Object> b, HttpServletRequest request) {
+        jdbc.update("update field_classification set category_id=?, level_id=?, classify_method='MANUAL', classified_by=?, classified_time=?, remark=? where id=?",
+                b.get("category_id"), b.get("level_id"), auth.currentUserId(request), LocalDateTime.now(), b.get("remark"), id);
+        auth.audit(auth.currentUserId(request), "UPDATE_CLASSIFICATION", "field_classification", id, auth.ip(request), "SUCCESS", "修改分类分级");
+        return Map.of("success", true);
+    }
+
+    @PostMapping("/api/field-classifications/auto-classify")
+    public Object autoClassify(HttpServletRequest request) {
+        List<Map<String, Object>> fields = jdbc.queryForList("select id, field_name from data_field_asset");
+        List<Map<String, Object>> rules = jdbc.queryForList("select * from classification_rule where enabled=1 order by id");
+        int count = 0;
+        for (Map<String, Object> field : fields) {
+            String name = String.valueOf(field.get("field_name")).toLowerCase();
+            for (Map<String, Object> rule : rules) {
+                String pattern = String.valueOf(rule.get("match_pattern")).toLowerCase();
+                boolean hit = "regex".equalsIgnoreCase(String.valueOf(rule.get("match_type")))
+                        ? Pattern.compile(pattern).matcher(name).find()
+                        : List.of(pattern.split("[,/|]")).stream().anyMatch(name::contains);
+                if (hit) {
+                    jdbc.update("""
+                            merge into field_classification(field_id, category_id, level_id, classify_method, classified_by, classified_time, remark)
+                            key(field_id) values(?,?,?,?,?,?,?)
+                            """,
+                            field.get("id"), rule.get("category_id"), rule.get("level_id"), "AUTO", auth.currentUserId(request), LocalDateTime.now(), "命中规则: " + rule.get("rule_name"));
+                    jdbc.update("update data_field_asset set is_sensitive=(select case when level_order>=3 then 1 else 0 end from classification_level where id=?) where id=?",
+                            rule.get("level_id"), field.get("id"));
+                    count++;
+                    break;
+                }
+            }
+        }
+        auth.audit(auth.currentUserId(request), "AUTO_CLASSIFY", "data_field_asset", null, auth.ip(request), "SUCCESS", "自动分类字段数: " + count);
+        return Map.of("classified", count);
+    }
+
+    @GetMapping("/api/rules")
+    public Object rules() {
+        return jdbc.queryForList("""
+                select r.*, c.category_name, l.level_code, l.level_name
+                from classification_rule r
+                left join classification_category c on c.id=r.category_id
+                left join classification_level l on l.id=r.level_id
+                order by r.id
+                """);
+    }
+
+    @PostMapping("/api/rules")
+    public Object createRule(@RequestBody Map<String, Object> b) {
+        jdbc.update("insert into classification_rule(rule_name,match_type,match_pattern,category_id,level_id,enabled,created_time) values(?,?,?,?,?,?,?)",
+                b.get("rule_name"), b.get("match_type"), b.get("match_pattern"), b.get("category_id"), b.get("level_id"), bool(b.get("enabled")), LocalDateTime.now());
+        return Map.of("success", true);
+    }
+
+    @PutMapping("/api/rules/{id}")
+    public Object updateRule(@PathVariable Long id, @RequestBody Map<String, Object> b) {
+        jdbc.update("update classification_rule set rule_name=?, match_type=?, match_pattern=?, category_id=?, level_id=?, enabled=? where id=?",
+                b.get("rule_name"), b.get("match_type"), b.get("match_pattern"), b.get("category_id"), b.get("level_id"), bool(b.get("enabled")), id);
+        return Map.of("success", true);
+    }
+
+    @DeleteMapping("/api/rules/{id}")
+    public Object deleteRule(@PathVariable Long id) { jdbc.update("delete from classification_rule where id=?", id); return Map.of("success", true); }
+
+    @GetMapping("/api/masking-policies")
+    public Object policies() { return jdbc.queryForList("select * from masking_policy order by id"); }
+
+    private boolean bool(Object v) { return v instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(v)); }
+    private Long num(Object v) { return v instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(v)); }
+}
