@@ -14,7 +14,6 @@ public class AuditRiskAgentService {
 
     public List<Map<String, Object>> analyze(Long userId) {
         List<Map<String, Object>> alerts = new ArrayList<>();
-        jdbc.update("delete from risk_alert where status='GENERATED'");
 
         for (Map<String, Object> row : jdbc.queryForList("""
                 select user_id, count(*) cnt from audit_log
@@ -67,6 +66,14 @@ public class AuditRiskAgentService {
     }
 
     private Map<String, Object> create(String type, String level, Long userId, String targetType, Long targetId, String desc, String suggestion) {
+        Integer exists = jdbc.queryForObject("""
+                select count(*) from risk_alert
+                where risk_type=? and coalesce(user_id,-1)=coalesce(?,-1) and target_type=? and coalesce(target_id,-1)=coalesce(?,-1)
+                  and status in ('OPEN','GENERATED')
+                """, Integer.class, type, userId, targetType, targetId);
+        if (exists != null && exists > 0) {
+            return Map.of("alertId", 0, "riskType", type, "riskLevel", level, "description", desc, "suggestion", suggestion, "duplicate", true);
+        }
         jdbc.update("insert into risk_alert(risk_type,risk_level,user_id,target_type,target_id,description,suggestion,status,created_time) values(?,?,?,?,?,?,?,?,?)",
                 type, level, userId, targetType, targetId, desc, suggestion, "GENERATED", LocalDateTime.now());
         Long id = jdbc.queryForObject("select max(alert_id) from risk_alert", Long.class);

@@ -60,9 +60,10 @@ public class AssetController {
     @GetMapping("/api/fields")
     public Object fields() {
         return jdbc.queryForList("""
-                select f.*, t.table_name, c.category_name, l.level_code, l.level_name
+                select f.*, t.table_name, s.source_name, c.category_name, l.level_code, l.level_name
                 from data_field_asset f
                 left join data_table_asset t on t.id=f.table_id
+                left join data_source s on s.id=t.source_id
                 left join field_classification fc on fc.field_id=f.id
                 left join classification_category c on c.id=fc.category_id
                 left join classification_level l on l.id=fc.level_id

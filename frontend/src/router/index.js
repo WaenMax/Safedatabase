@@ -28,13 +28,13 @@ const routes = [
   { path: '/requests', component: AccessRequests, props: { mode: 'user' } },
   { path: '/approvals', component: AccessRequests, props: { mode: 'approver' } },
   { path: '/audit', component: AuditLogs },
-  { path: '/users', component: Users }
-  ,{ path: '/agent', component: AgentWorkbench }
-  ,{ path: '/agent/field-classify', component: AgentFieldClassify }
-  ,{ path: '/agent/approval-advice', component: AgentApprovalAdvice }
-  ,{ path: '/agent/risk-alerts', component: AgentRiskAlerts }
-  ,{ path: '/agent/security-report', component: AgentSecurityReport }
-  ,{ path: '/agent/chat', component: AgentChat }
+  { path: '/users', component: Users },
+  { path: '/agent', component: AgentWorkbench },
+  { path: '/agent/field-classify', component: AgentFieldClassify },
+  { path: '/agent/approval-advice', component: AgentApprovalAdvice },
+  { path: '/agent/risk-alerts', component: AgentRiskAlerts },
+  { path: '/agent/security-report', component: AgentSecurityReport },
+  { path: '/agent/chat', component: AgentChat }
 ]
 
 const router = createRouter({ history: createWebHistory(), routes })
