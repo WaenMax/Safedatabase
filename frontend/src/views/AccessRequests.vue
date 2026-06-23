@@ -17,6 +17,18 @@
       <el-table-column prop="ID" label="ID" width="70" /><el-table-column prop="USERNAME" label="申请人" /><el-table-column prop="FIELD_NAME" label="字段" /><el-table-column label="等级" width="90"><template #default="{row}"><el-tag :type="levelTag(row.LEVEL_CODE)">{{ row.LEVEL_CODE }}</el-tag></template></el-table-column><el-table-column prop="REASON" label="申请原因" /><el-table-column label="状态" width="110"><template #default="{row}"><el-tag :type="statusTag(row.STATUS)">{{ row.STATUS }}</el-tag></template></el-table-column><el-table-column prop="VALID_UNTIL" label="有效期" />
       <el-table-column v-if="mode === 'approver'" label="审批" width="250"><template #default="{row}"><el-button size="small" @click.stop="review(row)">Agent 建议</el-button><el-button size="small" type="success" @click.stop="approve(row)">通过</el-button><el-button size="small" type="danger" @click.stop="reject(row)">驳回</el-button></template></el-table-column>
     </el-table>
+    <el-pagination
+      v-if="total > pageSize"
+      style="margin-top: 16px; justify-content: flex-end"
+      background
+      layout="total, prev, pager, next, sizes"
+      :total="total"
+      v-model:current-page="page"
+      v-model:page-size="pageSize"
+      :page-sizes="[10, 20, 50, 100]"
+      @current-change="load"
+      @size-change="load"
+    />
     <aside v-if="mode === 'approver'" class="approval-side">
       <template v-if="selected">
         <strong>申请 #{{ selected.ID }}</strong>
@@ -67,7 +79,11 @@ const approvedCount = computed(() => rows.value.filter(row => row.STATUS === 'AP
 const rejectedCount = computed(() => rows.value.filter(row => row.STATUS === 'REJECTED').length)
 const highCount = computed(() => rows.value.filter(row => ['L4','L5'].includes(row.LEVEL_CODE)).length)
 const policyNames = computed(() => (detail.value?.maskingPolicies || []).map(p=>p.POLICY_NAME).join('、') || '-')
-async function load(){ rows.value=await api.get('/access-requests') }
+const page=ref(1), pageSize=ref(20), total=ref(0)
+async function load(){
+  const res=await api.get(`/access-requests?page=${page.value}&pageSize=${pageSize.value}`)
+  rows.value=res.rows; total.value=res.total
+}
 async function submit(){ const r=await api.post('/access-requests', form); if(r.duplicate){ ElMessage.warning(r.message); return } visible.value=false; ElMessage.success('申请已提交'); load() }
 function approve(row){ openApproval(row,'approve') }
 function reject(row){ openApproval(row,'reject') }

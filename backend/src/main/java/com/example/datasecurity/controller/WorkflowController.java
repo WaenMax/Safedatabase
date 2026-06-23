@@ -16,7 +16,9 @@ public class WorkflowController {
     private final AuthService auth;
 
     @GetMapping("/api/access-requests")
-    public Object requests(HttpServletRequest request) {
+    public Object requests(HttpServletRequest request,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
         String base = """
                 select ar.*, u.username, f.field_name, l.level_code
                 from access_request ar
@@ -25,10 +27,18 @@ public class WorkflowController {
                 left join field_classification fc on fc.field_id=f.id
                 left join classification_level l on l.id=fc.level_id
                 """;
+        int offset = (page - 1) * pageSize;
         if ("user".equals(auth.currentRole(request))) {
-            return jdbc.queryForList(base + " where ar.user_id=? order by ar.id desc", auth.currentUserId(request));
+            Long userId = auth.currentUserId(request);
+            int total = jdbc.queryForObject(
+                    "select count(*) from access_request where user_id=?", Integer.class, userId);
+            var rows = jdbc.queryForList(base + " where ar.user_id=? order by ar.id desc limit ? offset ?",
+                    userId, pageSize, offset);
+            return Map.of("rows", rows, "total", total);
         }
-        return jdbc.queryForList(base + " order by ar.id desc");
+        int total = jdbc.queryForObject("select count(*) from access_request", Integer.class);
+        var rows = jdbc.queryForList(base + " order by ar.id desc limit ? offset ?", pageSize, offset);
+        return Map.of("rows", rows, "total", total);
     }
 
     @GetMapping("/api/access-requests/{id}/detail")
@@ -109,12 +119,42 @@ public class WorkflowController {
     }
 
     @GetMapping("/api/audit-logs")
-    public Object auditLogs() {
-        return jdbc.queryForList("""
-                select a.*, u.username
-                from audit_log a left join sys_user u on u.id=a.user_id
-                order by a.operation_time desc, a.id desc
-                """);
+    public Object auditLogs(
+            @RequestParam(required = false) String user,
+            @RequestParam(required = false) String operation,
+            @RequestParam(required = false) String result,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        StringBuilder where = new StringBuilder(" where 1=1");
+        java.util.List<Object> params = new java.util.ArrayList<>();
+        if (user != null && !user.isBlank()) {
+            where.append(" and u.username like ?");
+            params.add("%" + user + "%");
+        }
+        if (operation != null && !operation.isBlank()) {
+            where.append(" and a.operation_type like ?");
+            params.add("%" + operation + "%");
+        }
+        if (result != null && !result.isBlank()) {
+            where.append(" and a.result = ?");
+            params.add(result);
+        }
+        if (startTime != null && !startTime.isBlank()) {
+            where.append(" and a.operation_time >= ?");
+            params.add(startTime);
+        }
+        if (endTime != null && !endTime.isBlank()) {
+            where.append(" and a.operation_time <= ?");
+            params.add(endTime);
+        }
+        String base = " from audit_log a left join sys_user u on u.id=a.user_id" + where;
+        int total = jdbc.queryForObject("select count(*)" + base, Integer.class, params.toArray());
+        int offset = (page - 1) * pageSize;
+        var rows = jdbc.queryForList("select a.*, u.username" + base + " order by a.operation_time desc, a.id desc limit ? offset ?",
+                addParams(params, pageSize, offset));
+        return Map.of("rows", rows, "total", total);
     }
 
     @GetMapping("/api/dashboard/summary")
@@ -157,5 +197,12 @@ public class WorkflowController {
     private void ensurePending(Long id) {
         String status = jdbc.queryForObject("select status from access_request where id=?", String.class, id);
         if (!"PENDING".equals(status)) throw new IllegalArgumentException("只能处理待审批申请");
+    }
+
+    private Object[] addParams(java.util.List<Object> params, Object... more) {
+        Object[] result = new Object[params.size() + more.length];
+        for (int i = 0; i < params.size(); i++) result[i] = params.get(i);
+        for (int i = 0; i < more.length; i++) result[params.size() + i] = more[i];
+        return result;
     }
 }

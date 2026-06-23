@@ -18,6 +18,8 @@ drop table if exists sys_user_role;
 drop table if exists sys_permission;
 drop table if exists sys_role;
 drop table if exists sys_user;
+drop trigger if exists trg_audit_field_classification_update;
+drop trigger if exists trg_audit_access_request_update;
 
 create table sys_user (
   id bigint auto_increment primary key,
@@ -216,3 +218,43 @@ create index idx_agent_recommendation_target on agent_recommendation(target_type
 create index idx_risk_alert_level on risk_alert(risk_level);
 create index idx_risk_alert_user on risk_alert(user_id);
 create index idx_agent_chat_user on agent_chat_history(user_id);
+
+-- ============================================================
+-- 数据库触发器：在 DB 层兜底审计关键操作
+-- 即使应用层漏写审计日志，触发器也能保证操作留痕
+-- ============================================================
+
+-- 触发器1：字段分类分级变更后自动写入审计日志
+create trigger trg_audit_field_classification_update
+after update on field_classification
+for each row
+insert into audit_log(user_id, operation_type, target_type, target_id, operation_time, result, detail)
+values (
+    coalesce(NEW.classified_by, OLD.classified_by),
+    'CLASSIFY_UPDATE_TRG',
+    'field_classification',
+    NEW.id,
+    now(),
+    'SUCCESS',
+    concat('DB触发器: field_id=', NEW.field_id,
+           ' 分类 ', coalesce(OLD.category_id, -1), '->', coalesce(NEW.category_id, -1),
+           ' 等级 ', coalesce(OLD.level_id, -1), '->', coalesce(NEW.level_id, -1))
+);
+
+-- 触发器2：访问申请状态变更后自动写入审计日志
+-- 仅在状态真正变化时才记录（INSERT ... SELECT FROM DUAL WHERE 实现条件触发）
+create trigger trg_audit_access_request_update
+after update on access_request
+for each row
+insert into audit_log(user_id, operation_type, target_type, target_id, operation_time, result, detail)
+select
+    NEW.user_id,
+    concat('ACCESS_', NEW.status, '_TRG'),
+    'access_request',
+    NEW.id,
+    now(),
+    'SUCCESS',
+    concat('DB触发器: 申请#', NEW.id, ' 状态 ', OLD.status, ' -> ', NEW.status,
+           ' 有效期 ', date_format(coalesce(NEW.valid_until, OLD.valid_until), '%Y-%m-%d %H:%i'))
+from dual
+where NEW.status <> OLD.status;

@@ -15,12 +15,18 @@ public class AdminController {
     private final PasswordEncoder encoder;
 
     @GetMapping("/api/users")
-    public Object users() {
-        return jdbc.queryForList("""
+    public Object users(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        int total = jdbc.queryForObject("select count(*) from sys_user", Integer.class);
+        int offset = (page - 1) * pageSize;
+        var rows = jdbc.queryForList("""
                 select u.id, u.username, u.real_name, u.email, u.phone, u.enabled, r.id role_id, r.role_code, r.role_name
                 from sys_user u left join sys_user_role ur on ur.user_id=u.id left join sys_role r on r.id=ur.role_id
                 order by u.id
-                """);
+                limit ? offset ?
+                """, pageSize, offset);
+        return Map.of("rows", rows, "total", total);
     }
 
     @PostMapping("/api/users")

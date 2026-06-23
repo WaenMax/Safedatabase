@@ -41,6 +41,18 @@
         <el-table-column prop="ID" label="ID" width="70" /><el-table-column prop="SOURCE_NAME" label="数据源" /><el-table-column prop="TABLE_NAME" label="表" /><el-table-column prop="FIELD_NAME" label="字段名" /><el-table-column prop="FIELD_TYPE" label="类型" /><el-table-column prop="FIELD_COMMENT" label="说明" /><el-table-column prop="CATEGORY_NAME" label="分类" /><el-table-column label="分级" width="90"><template #default="{row}"><el-tag :type="levelTag(row.LEVEL_CODE)">{{ row.LEVEL_CODE || '-' }}</el-tag></template></el-table-column>
         <el-table-column label="操作" width="330"><template #default="{row}"><el-button size="small" @click="detail(row)">详情/脱敏</el-button><el-button size="small" @click="requestAccess(row)">申请原始值</el-button><el-button size="small" @click="open(row)">编辑</el-button><el-button size="small" type="danger" @click="remove(row)">删除</el-button></template></el-table-column>
       </el-table>
+      <el-pagination
+        v-if="total > pageSize"
+        style="margin-top: 16px; justify-content: flex-end"
+        background
+        layout="total, prev, pager, next, sizes"
+        :total="total"
+        v-model:current-page="page"
+        v-model:page-size="pageSize"
+        :page-sizes="[10, 20, 50, 100]"
+        @current-change="load"
+        @size-change="load"
+      />
     </section>
   </div>
   <el-dialog v-model="visible" title="字段维护" width="560px">
@@ -86,6 +98,7 @@ const rows = ref([]), visible = ref(false), detailVisible = ref(false), requestV
 const form = reactive({}), current = ref({}), raw = ref({}), masked = ref({})
 const filters = reactive({ source: '', table: '', field: '', sensitive: '' })
 const requestForm = reactive({ field_id: null, field_name: '', reason: '业务处理需要查看该字段原始样例值' })
+const page = ref(1), pageSize = ref(20), total = ref(0)
 const treeData = computed(() => {
   const sources = new Map()
   for (const row of rows.value) {
@@ -112,7 +125,10 @@ const filteredRows = computed(() => rows.value.filter(row => {
 }))
 const sensitiveCount = computed(() => filteredRows.value.filter(row => !!row.IS_SENSITIVE).length)
 const highCount = computed(() => filteredRows.value.filter(row => ['L4', 'L5'].includes(row.LEVEL_CODE)).length)
-async function load(){ rows.value = await api.get('/fields') }
+async function load(){
+  const res = await api.get(`/fields?page=${page.value}&pageSize=${pageSize.value}`)
+  rows.value = res.rows; total.value = res.total
+}
 function lower(row){ const obj={}; for(const k in row)obj[k.toLowerCase()]=row[k]; return obj }
 function open(row){ Object.keys(form).forEach(k=>delete form[k]); Object.assign(form, lower(row)); form.is_sensitive=!!form.is_sensitive; visible.value=true }
 async function save(){ form.id ? await api.put(`/fields/${form.id}`, form) : await api.post('/fields', form); visible.value=false; ElMessage.success('保存成功'); load() }

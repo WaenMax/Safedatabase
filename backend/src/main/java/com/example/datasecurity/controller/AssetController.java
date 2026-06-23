@@ -58,8 +58,12 @@ public class AssetController {
     public Object deleteTable(@PathVariable Long id) { jdbc.update("delete from data_table_asset where id=?", id); return Map.of("success", true); }
 
     @GetMapping("/api/fields")
-    public Object fields() {
-        return jdbc.queryForList("""
+    public Object fields(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        int total = jdbc.queryForObject("select count(*) from data_field_asset", Integer.class);
+        int offset = (page - 1) * pageSize;
+        var rows = jdbc.queryForList("""
                 select f.*, t.table_name, s.source_name, c.category_name, l.level_code, l.level_name
                 from data_field_asset f
                 left join data_table_asset t on t.id=f.table_id
@@ -68,7 +72,9 @@ public class AssetController {
                 left join classification_category c on c.id=fc.category_id
                 left join classification_level l on l.id=fc.level_id
                 order by f.id
-                """);
+                limit ? offset ?
+                """, pageSize, offset);
+        return Map.of("rows", rows, "total", total);
     }
 
     @GetMapping("/api/fields/{id}")

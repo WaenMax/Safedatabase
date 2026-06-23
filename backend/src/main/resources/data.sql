@@ -12,10 +12,10 @@ insert into sys_permission(permission_code, permission_name, description) values
 ('audit:view','审计查看','查看审计日志');
 
 insert into sys_user(id, username, password, real_name, email, phone, enabled, created_time) values
-(1,'admin','123456','系统管理员','admin@example.com','13800008888',1,current_timestamp),
-(2,'security','123456','安全管理员','security@example.com','13800006666',1,current_timestamp),
-(3,'user','123456','业务用户','user@example.com','13800001111',1,current_timestamp),
-(4,'approver','123456','审批人员','approver@example.com','13800002222',1,current_timestamp);
+(1,'admin','$2b$12$NKx1DyZcWtvfwddrtOQfruFR90eNU49pr2P.fkqHXsOFnhP55b0Ce','系统管理员','admin@example.com','13800008888',1,current_timestamp),
+(2,'security','$2b$12$NKx1DyZcWtvfwddrtOQfruFR90eNU49pr2P.fkqHXsOFnhP55b0Ce','安全管理员','security@example.com','13800006666',1,current_timestamp),
+(3,'user','$2b$12$NKx1DyZcWtvfwddrtOQfruFR90eNU49pr2P.fkqHXsOFnhP55b0Ce','业务用户','user@example.com','13800001111',1,current_timestamp),
+(4,'approver','$2b$12$NKx1DyZcWtvfwddrtOQfruFR90eNU49pr2P.fkqHXsOFnhP55b0Ce','审批人员','approver@example.com','13800002222',1,current_timestamp);
 
 insert into sys_user_role(user_id, role_id) values (1,1),(2,2),(3,3),(4,4);
 

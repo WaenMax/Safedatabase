@@ -24,15 +24,21 @@ public class ClassificationController {
     public Object levels() { return jdbc.queryForList("select * from classification_level order by level_order"); }
 
     @GetMapping("/api/field-classifications")
-    public Object classifications() {
-        return jdbc.queryForList("""
+    public Object classifications(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        int total = jdbc.queryForObject("select count(*) from field_classification", Integer.class);
+        int offset = (page - 1) * pageSize;
+        var rows = jdbc.queryForList("""
                 select fc.*, f.field_name, f.sample_value, f.field_comment, c.category_name, l.level_code, l.level_name
                 from field_classification fc
                 join data_field_asset f on f.id=fc.field_id
                 join classification_category c on c.id=fc.category_id
                 join classification_level l on l.id=fc.level_id
                 order by fc.id
-                """).stream().peek(this::attachEvidence).toList();
+                limit ? offset ?
+                """, pageSize, offset).stream().peek(this::attachEvidence).toList();
+        return Map.of("rows", rows, "total", total);
     }
 
     @PostMapping("/api/field-classifications")
@@ -85,14 +91,20 @@ public class ClassificationController {
     }
 
     @GetMapping("/api/rules")
-    public Object rules() {
-        return jdbc.queryForList("""
+    public Object rules(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        int total = jdbc.queryForObject("select count(*) from classification_rule", Integer.class);
+        int offset = (page - 1) * pageSize;
+        var rows = jdbc.queryForList("""
                 select r.*, c.category_name, l.level_code, l.level_name
                 from classification_rule r
                 left join classification_category c on c.id=r.category_id
                 left join classification_level l on l.id=r.level_id
                 order by r.id
-                """);
+                limit ? offset ?
+                """, pageSize, offset);
+        return Map.of("rows", rows, "total", total);
     }
 
     @PostMapping("/api/rules")
@@ -113,7 +125,38 @@ public class ClassificationController {
     public Object deleteRule(@PathVariable Long id) { jdbc.update("delete from classification_rule where id=?", id); return Map.of("success", true); }
 
     @GetMapping("/api/masking-policies")
-    public Object policies() { return jdbc.queryForList("select * from masking_policy order by id"); }
+    public Object policies(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        int total = jdbc.queryForObject("select count(*) from masking_policy", Integer.class);
+        int offset = (page - 1) * pageSize;
+        var rows = jdbc.queryForList("select * from masking_policy order by id limit ? offset ?", pageSize, offset);
+        return Map.of("rows", rows, "total", total);
+    }
+
+    @PostMapping("/api/masking-policies")
+    public Object createPolicy(@RequestBody Map<String, Object> b, HttpServletRequest request) {
+        jdbc.update("insert into masking_policy(policy_name,policy_type,example_before,example_after,description,enabled) values(?,?,?,?,?,?)",
+                b.get("policy_name"), b.get("policy_type"), b.get("example_before"), b.get("example_after"), b.get("description"), bool(b.getOrDefault("enabled", true)));
+        auth.audit(auth.currentUserId(request), "CREATE_MASKING_POLICY", "masking_policy", null, auth.ip(request), "SUCCESS", "新增脱敏策略: " + b.get("policy_name"));
+        return Map.of("success", true);
+    }
+
+    @PutMapping("/api/masking-policies/{id}")
+    public Object updatePolicy(@PathVariable Long id, @RequestBody Map<String, Object> b, HttpServletRequest request) {
+        jdbc.update("update masking_policy set policy_name=?, policy_type=?, example_before=?, example_after=?, description=?, enabled=? where id=?",
+                b.get("policy_name"), b.get("policy_type"), b.get("example_before"), b.get("example_after"), b.get("description"), bool(b.getOrDefault("enabled", true)), id);
+        auth.audit(auth.currentUserId(request), "UPDATE_MASKING_POLICY", "masking_policy", id, auth.ip(request), "SUCCESS", "修改脱敏策略: " + b.get("policy_name"));
+        return Map.of("success", true);
+    }
+
+    @DeleteMapping("/api/masking-policies/{id}")
+    public Object deletePolicy(@PathVariable Long id, HttpServletRequest request) {
+        Map<String, Object> existing = jdbc.queryForMap("select policy_name from masking_policy where id=?", id);
+        jdbc.update("delete from masking_policy where id=?", id);
+        auth.audit(auth.currentUserId(request), "DELETE_MASKING_POLICY", "masking_policy", id, auth.ip(request), "SUCCESS", "删除脱敏策略: " + existing.get("POLICY_NAME"));
+        return Map.of("success", true);
+    }
 
     private boolean bool(Object v) { return v instanceof Boolean b ? b : Boolean.parseBoolean(String.valueOf(v)); }
     private Long num(Object v) { return v instanceof Number n ? n.longValue() : Long.parseLong(String.valueOf(v)); }

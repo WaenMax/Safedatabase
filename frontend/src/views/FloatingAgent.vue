@@ -53,7 +53,7 @@ const question = ref('哪些字段是高敏感数据？')
 const messages = ref([
   { role: 'assistant', content: '你好，我是数据安全治理 Agent。可以帮你分析字段、审批申请、审计风险和整改建议。' }
 ])
-const quickQuestions = ['哪些字段是高敏感数据？', '最近有哪些风险告警？', '当前系统的敏感字段数量是多少？', '生成一份安全治理建议']
+const quickQuestions = ['系统概览', '有哪些高敏感字段？', '最近有哪些风险告警？', '有几个待审批申请？', '哪些字段还没分类？', '生成一份安全治理建议']
 const providerLabel = computed(() => ({ local: '本地规则推理', deepseek: 'DeepSeek 官方 API', siliconflow: '硅基流动 API' }[provider.value]))
 
 watch(provider, v => localStorage.setItem('agent_provider', v))

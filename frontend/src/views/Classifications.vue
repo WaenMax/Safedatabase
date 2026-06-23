@@ -29,7 +29,7 @@
   </div>
   <el-table :data="filteredRows" border>
     <el-table-column type="expand">
-      <template #default="{row}">
+      <template #default="{ row }">
         <div class="evidence-box">
           <div><strong>规则证据</strong><span>{{ row.EVIDENCE_RULE }}</span></div>
           <div><strong>格式证据</strong><span>{{ row.EVIDENCE_FORMAT }}</span></div>
@@ -40,12 +40,24 @@
     </el-table-column>
     <el-table-column prop="FIELD_NAME" label="字段" />
     <el-table-column prop="CATEGORY_NAME" label="分类" />
-    <el-table-column label="等级" width="90"><template #default="{row}"><el-tag :type="levelTag(row.LEVEL_CODE)">{{ row.LEVEL_CODE }}</el-tag></template></el-table-column>
+    <el-table-column label="等级" width="90"><template #default="{ row }"><el-tag :type="levelTag(row.LEVEL_CODE)">{{ row.LEVEL_CODE }}</el-tag></template></el-table-column>
     <el-table-column prop="CLASSIFY_METHOD" label="方式" width="110" />
     <el-table-column prop="CLASSIFIED_TIME" label="更新时间" width="180" />
     <el-table-column prop="EVIDENCE_RULE" label="命中规则" min-width="180" />
-    <el-table-column label="操作" width="170"><template #default="{row}"><el-button size="small" @click="agentOne(row)">Agent</el-button><el-button size="small" @click="open(row)">编辑</el-button></template></el-table-column>
+    <el-table-column label="操作" width="170"><template #default="{ row }"><el-button size="small" @click="agentOne(row)">Agent</el-button><el-button size="small" @click="open(row)">编辑</el-button></template></el-table-column>
   </el-table>
+  <el-pagination
+    v-if="total > pageSize"
+    style="margin-top: 16px; justify-content: flex-end"
+    background
+    layout="total, prev, pager, next, sizes"
+    :total="total"
+    v-model:current-page="page"
+    v-model:page-size="pageSize"
+    :page-sizes="[10, 20, 50, 100]"
+    @current-change="load"
+    @size-change="load"
+  />
   <el-dialog v-model="visible" title="分类分级" width="520px">
     <el-form :model="form" label-width="100px">
       <el-form-item label="字段ID"><el-input v-model="form.field_id" /></el-form-item>
@@ -63,6 +75,7 @@ import { ElMessage } from 'element-plus'
 import { api } from '../api/http'
 const rows=ref([]), categories=ref([]), levels=ref([]), visible=ref(false), form=reactive({})
 const filters=reactive({ field:'', level:'', method:'' })
+const page=ref(1), pageSize=ref(20), total=ref(0)
 const filteredRows=computed(()=>rows.value.filter(row=>
   (!filters.field || String(row.FIELD_NAME).toLowerCase().includes(filters.field.toLowerCase())) &&
   (!filters.level || row.LEVEL_CODE === filters.level) &&
@@ -73,7 +86,11 @@ const levelMatrix=computed(()=>levels.value.map(level=>({
   name: level.LEVEL_NAME,
   count: rows.value.filter(row=>row.LEVEL_CODE===level.LEVEL_CODE).length
 })))
-async function load(){ rows.value=await api.get('/field-classifications'); categories.value=await api.get('/categories'); levels.value=await api.get('/levels') }
+async function load(){
+  const res=await api.get(`/field-classifications?page=${page.value}&pageSize=${pageSize.value}`)
+  rows.value=res.rows; total.value=res.total
+  categories.value=await api.get('/categories'); levels.value=await api.get('/levels')
+}
 function open(row){ Object.keys(form).forEach(k=>delete form[k]); Object.assign(form,{ id:row.ID, field_id:row.FIELD_ID, category_id:row.CATEGORY_ID, level_id:row.LEVEL_ID, remark:row.REMARK }); visible.value=true }
 async function save(){ form.id ? await api.put(`/field-classifications/${form.id}`, form) : await api.post('/field-classifications', form); visible.value=false; ElMessage.success('保存成功'); load() }
 async function autoClassify(){ const r=await api.post('/field-classifications/auto-classify',{}); ElMessage.success(`自动分类完成：${r.classified} 个字段`); load() }
