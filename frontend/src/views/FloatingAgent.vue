@@ -17,7 +17,7 @@
     </div>
     <div class="agent-messages">
       <div v-for="(m, i) in messages" :key="i" :class="['agent-msg', m.role]">
-        <div>{{ m.content }}</div>
+        <div class="markdown-body" v-html="renderMarkdown(m.content)"></div>
       </div>
     </div>
     <div class="agent-quick">
@@ -35,6 +35,7 @@
 import { computed, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import { api } from '../api/http'
+import { renderMarkdown } from '../utils/markdown'
 
 const open = ref(false)
 const loading = ref(false)
