@@ -24,8 +24,22 @@ http.interceptors.response.use(
 )
 
 export const api = {
-  get: (url) => http.get(url).then(r => r.data),
-  post: (url, data) => http.post(url, data).then(r => r.data),
-  put: (url, data) => http.put(url, data).then(r => r.data),
-  del: (url) => http.delete(url).then(r => r.data)
+  get: (url) => http.get(url).then(r => normalizeKeys(r.data)),
+  post: (url, data) => http.post(url, data).then(r => normalizeKeys(r.data)),
+  put: (url, data) => http.put(url, data).then(r => normalizeKeys(r.data)),
+  del: (url) => http.delete(url).then(r => normalizeKeys(r.data))
+}
+
+function normalizeKeys(value) {
+  if (Array.isArray(value)) return value.map(normalizeKeys)
+  if (!value || typeof value !== 'object') return value
+
+  const normalized = {}
+  for (const [key, raw] of Object.entries(value)) {
+    const child = normalizeKeys(raw)
+    normalized[key] = child
+    const upperKey = key.toUpperCase()
+    if (!(upperKey in normalized)) normalized[upperKey] = child
+  }
+  return normalized
 }
